@@ -114,7 +114,26 @@ export default function Leaderboard({ onLogout }) {
                                             #{index + 1}
                                         </td>
                                         <td style={{ padding: '1rem' }}>
-                                            <div style={{ fontWeight: 'bold', color: 'white' }}>#{contestant.id} - {contestant.name}</div>
+                                            <div style={{ fontWeight: 'bold', color: 'white' }}>
+                                                #{contestant.id} - <a
+                                                    href={contestant.link}
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    style={{
+                                                        color: 'white',
+                                                        textDecoration: 'none',
+                                                        transition: 'all 0.2s ease'
+                                                    }}
+                                                    onMouseEnter={(e) => {
+                                                        e.target.style.textDecoration = 'underline';
+                                                    }}
+                                                    onMouseLeave={(e) => {
+                                                        e.target.style.textDecoration = 'none';
+                                                    }}
+                                                >
+                                                    {contestant.name}
+                                                </a>
+                                            </div>
                                         </td>
                                         <td style={{ padding: '1rem', textAlign: 'right', fontWeight: 'bold', fontSize: '1.1rem' }}>
                                             {calculateTotalScore(contestant.id)}
