@@ -9,5 +9,21 @@ export const contestants = [
     { id: 8, name: 'Misbah Fatma Begum', link: 'https://people.rit.edu/mfb8290/competition/starting' },
     { id: 9, name: 'Maryam Meda', link: 'https://maryammeda.github.io/CelarisAI/' },
     { id: 10, name: 'Mira Mohd. Ismail', link: 'https://mira-m-ismail.github.io/SpaceLullaby/space-lullaby.html' },
-    { id: 11, name: 'Gautam Binu', link: 'https://astraestudios.gautambinu.me/' }
+    { id: 11, name: 'Gautam Binu', link: 'https://astraestudios.gautambinu.me/' },
+    { id: 12, name: 'Sonali Bugwandin', link: 'https://people.rit.edu/sb4171/Botanical_Garden/index.html' },
+    { id: 13, name: 'Nasheel Nadeem', link: 'https://people.rit.edu/nn2279/gd/index.html' },
+    { id: 14, name: 'Mariah Jariwala', link: 'https://people.rit.edu/mj1415/Photobooth/' },
+    { id: 15, name: 'Reema Maryam Naheem', link: 'https://reemamaryam.github.io/MovieArchive/' },
+    { id: 16, name: 'Zahra Hassanaly', link: 'https://zeta786.wixstudio.com/zahra-hassanaly' },
+    { id: 17, name: 'Asim Mairaj', link: 'https://projectworldcrisis-s71u.vercel.app/' },
+    { id: 18, name: 'Afnan Nazir Hasan', link: 'https://people.rit.edu/anh3100/Designathon%20Submission/Designathon%20submission.html' },
+    { id: 19, name: 'Grishma Bhandari', link: 'https://people.rit.edu/gb2109/gdc_comp/' },
+    { id: 20, name: 'Manal Kaup', link: 'https://manals-two-in-one-hub.webflow.io/' },
+    { id: 21, name: 'Rashed Saeed Almansoori', link: 'https://rsmsixpoint1.wixstudio.com/vibe67' },
+    { id: 22, name: 'Yazan Kastali', link: 'https://yazan-kastali.github.io/EcoHero-Tracker/' },
+    { id: 23, name: 'Omar Sawalmeh', link: 'https://oes2789.github.io/Barcelona-/' },
+    { id: 24, name: 'Adham Khalifa', link: 'https://aak9351.github.io/Designathon/' },
+    { id: 25, name: 'Muhammad Arsalan Habib', link: 'https://me.arhb.net/GroupBTribute/index.html' },
+    { id: 26, name: 'Suraj Gollapalli', link: 'https://giwmvspc.dora.run/' },
+    { id: 27, name: 'Mohammed Baahir Yusuf', link: 'https://baahir21189.github.io/GD-Club---Project/' }
 ];
