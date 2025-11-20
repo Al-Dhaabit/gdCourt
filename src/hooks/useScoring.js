@@ -7,14 +7,14 @@ export function useScoring() {
     const [statuses, setStatuses] = useState({});
 
     useEffect(() => {
-        // Subscribe to scores
+        // Subscribe to all scores
         const scoresRef = ref(db, 'scores');
         const unsubscribeScores = onValue(scoresRef, (snapshot) => {
             const data = snapshot.val();
             setAllScores(data || {});
         });
 
-        // Subscribe to statuses
+        // Subscribe to all statuses
         const statusRef = ref(db, 'status');
         const unsubscribeStatus = onValue(statusRef, (snapshot) => {
             const data = snapshot.val();
@@ -36,13 +36,15 @@ export function useScoring() {
         return allScores[judgeId]?.[contestantId] || null;
     };
 
-    const getJudgeProgress = (judgeId, totalContestants) => {
+    const getJudgeProgress = (judgeId, assignedContestantIds) => {
         const judgeScores = allScores[judgeId] || {};
-        const scoredCount = Object.keys(judgeScores).length;
+        // Filter scores to only include those in the assigned list
+        const scoredCount = Object.keys(judgeScores).filter(id => assignedContestantIds.includes(id)).length;
+        const total = assignedContestantIds.length;
         return {
             scored: scoredCount,
-            total: totalContestants,
-            percentage: Math.round((scoredCount / totalContestants) * 100)
+            total: total,
+            percentage: total === 0 ? 0 : Math.round((scoredCount / total) * 100)
         };
     };
 
@@ -58,26 +60,32 @@ export function useScoring() {
         return statuses;
     };
 
-    const resetSystem = () => {
-        remove(ref(db, 'scores'));
-        remove(ref(db, 'status'));
-        window.location.reload();
-    };
-
     const resetRound1 = () => {
-        const round1Judges = ['Laayba', 'Mariam', 'Khaleel'];
-        round1Judges.forEach(judge => {
-            remove(ref(db, `scores/${judge}`));
-            remove(ref(db, `status/${judge}`));
-        });
+        // Reset Round 1 judges (Laayba, Mariam, Khaleel)
+        remove(ref(db, 'scores/Laayba'));
+        remove(ref(db, 'scores/Mariam'));
+        remove(ref(db, 'scores/Khaleel'));
+        remove(ref(db, 'status/Laayba'));
+        remove(ref(db, 'status/Mariam'));
+        remove(ref(db, 'status/Khaleel'));
         window.location.reload();
     };
 
     const resetRound2 = () => {
-        remove(ref(db, 'scores/Rashed'));
-        remove(ref(db, 'status/Rashed'));
+        // Reset Round 2 judge (MrRashed)
+        remove(ref(db, 'scores/MrRashed'));
+        remove(ref(db, 'status/MrRashed'));
         window.location.reload();
     };
 
-    return { saveScore, getScore, getJudgeProgress, allScores, updateStatus, getStatuses, resetSystem, resetRound1, resetRound2 };
+    const resetISTE140 = () => {
+        // Reset ISTE140 judges
+        remove(ref(db, 'scores/Laayba_iste140'));
+        remove(ref(db, 'scores/Khaled'));
+        remove(ref(db, 'status/Laayba_iste140'));
+        remove(ref(db, 'status/Khaled'));
+        window.location.reload();
+    };
+
+    return { saveScore, getScore, getJudgeProgress, allScores, updateStatus, getStatuses, resetRound1, resetRound2, resetISTE140 };
 }

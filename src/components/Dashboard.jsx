@@ -1,16 +1,36 @@
 import React from 'react';
 import { contestants } from '../data/contestants';
+import { iste140Contestants } from '../data/iste140Contestants';
 import { getContestantsForJudge } from '../data/judgeAssignments';
 import { useScoring } from '../hooks/useScoring';
 
-export default function Dashboard({ judgeId, onSelectContestant }) {
+export default function Dashboard({ judgeId, category = 'individual', onSelectContestant }) {
     const { getScore, getJudgeProgress, updateStatus } = useScoring();
-    const assignedContestants = getContestantsForJudge(judgeId, contestants);
-    const progress = getJudgeProgress(judgeId, assignedContestants.length);
+
+    // Load contestants based on category
+    const allContestants = category === 'iste140' ? iste140Contestants : contestants;
+    const assignedContestants = getContestantsForJudge(judgeId, allContestants);
+
+    const progress = getJudgeProgress(judgeId, assignedContestants.map(c => c.id));
+
+    // Hide names for ISTE140 category or if judge is not MrRashed in individual category
+    const hideNames = category === 'iste140' || (category === 'individual' && judgeId !== 'MrRashed');
 
     React.useEffect(() => {
-        updateStatus(judgeId, 'Viewing Dashboard');
-    }, [judgeId]);
+        updateStatus(judgeId, `Viewing Dashboard (${category === 'iste140' ? 'ISTE140' : 'Individual'})`);
+    }, [judgeId, category]);
+
+    // Safety check
+    if (!assignedContestants || assignedContestants.length === 0) {
+        return (
+            <div style={{ padding: '2rem', textAlign: 'center', color: 'white' }}>
+                <h2>No contestants assigned</h2>
+                <p>Judge ID: {judgeId}</p>
+                <p>Category: {category}</p>
+                <p>Please contact the administrator.</p>
+            </div>
+        );
+    }
 
     return (
         <div>
@@ -74,7 +94,12 @@ export default function Dashboard({ judgeId, onSelectContestant }) {
                                     </span>
                                 )}
                             </div>
-                            <h3 style={{ fontSize: '1.1rem', fontWeight: '600', color: 'white' }}>{contestant.name}</h3>
+                            <h3 style={{ fontSize: '1.1rem', fontWeight: '600', color: 'white' }}>
+                                {hideNames
+                                    ? `Contestant ${contestant.id}`
+                                    : contestant.name
+                                }
+                            </h3>
                             {isComplete ? (
                                 <div style={{ marginTop: 'auto', paddingTop: '0.5rem' }}>
                                     <span style={{ fontSize: '0.875rem', color: 'var(--text-secondary)' }}>Score: </span>
@@ -89,6 +114,6 @@ export default function Dashboard({ judgeId, onSelectContestant }) {
                     );
                 })}
             </div>
-        </div>
+        </div >
     );
 }

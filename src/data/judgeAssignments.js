@@ -1,6 +1,6 @@
 // Judge-specific contestant assignments
 export const judgeAssignments = {
-    'Rashed': [5, 25, 10, 22, 17, 2, 21, 6, 4, 11]
+    'MrRashed': [5, 25, 10, 22, 17, 2, 21, 6, 4, 11]
 };
 
 // Function to get contestants for a specific judge

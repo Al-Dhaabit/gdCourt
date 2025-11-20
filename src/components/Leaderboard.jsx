@@ -1,26 +1,43 @@
 import React, { useState, useEffect } from 'react';
-import { useScoring } from '../hooks/useScoring';
 import { contestants } from '../data/contestants';
+import { iste140Contestants } from '../data/iste140Contestants';
 import { judgeAssignments } from '../data/judgeAssignments';
+import { useScoring } from '../hooks/useScoring';
 
 export default function Leaderboard({ onLogout }) {
-    const { allScores, getStatuses, resetSystem, resetRound1, resetRound2 } = useScoring();
+    const { allScores, getStatuses, resetRound1, resetRound2, resetISTE140 } = useScoring();
+    const [activeCategory, setActiveCategory] = useState('individual');
+    const [showResetModal, setShowResetModal] = useState(false);
+    const [resetType, setResetType] = useState(null);
     const statuses = getStatuses();
 
-    const calculateTotalScore = (contestantId, judges) => {
-        let total = 0;
-        judges.forEach(judge => {
-            if (allScores[judge]?.[contestantId]) {
-                total += allScores[judge][contestantId].total;
-            }
-        });
-        return total;
+    const handleResetClick = (type) => {
+        setResetType(type);
+        setShowResetModal(true);
     };
 
+    const confirmReset = () => {
+        if (resetType === 'round1') {
+            resetRound1();
+        } else if (resetType === 'round2') {
+            resetRound2();
+        } else if (resetType === 'iste140') {
+            resetISTE140();
+        }
+        setShowResetModal(false);
+    };
+
+    const calculateTotalScore = (contestantId, judges) => {
+        return judges.reduce((sum, judge) => {
+            const score = allScores[judge]?.[contestantId];
+            return sum + (score?.total || 0);
+        }, 0);
+    };
+
+    // Individual category
     const round1Judges = ['Laayba', 'Mariam', 'Khaleel'];
-    const round2Judges = ['Rashed'];
-    const judgeDisplayNames = { 'Rashed': 'Mr. Rashed' };
-    const round2Contestants = contestants.filter(c => judgeAssignments['Rashed'].includes(c.id));
+    const round2Judges = ['MrRashed'];
+    const round2Contestants = contestants.filter(c => judgeAssignments['MrRashed']?.includes(c.id));
 
     const sortedRound1 = [...contestants].sort((a, b) => {
         return calculateTotalScore(b.id, round1Judges) - calculateTotalScore(a.id, round1Judges);
@@ -30,90 +47,88 @@ export default function Leaderboard({ onLogout }) {
         return calculateTotalScore(b.id, round2Judges) - calculateTotalScore(a.id, round2Judges);
     });
 
-    const renderJudgeStatus = (judges, title) => (
-        <div className="glass-panel" style={{ padding: '1.5rem', height: 'fit-content' }}>
-            <h2 style={{ fontSize: '1.25rem', marginBottom: '1rem', color: 'var(--accent-secondary)' }}>{title}</h2>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                {judges.map(judge => {
-                    const status = statuses[judge];
-                    const isOnline = status && (Date.now() - status.timestamp < 30000);
-                    const displayName = judgeDisplayNames[judge] || judge;
+    // ISTE140 category
+    const iste140Judges = ['Laayba_iste140', 'Khaled'];
+    const sortedISTE140 = [...iste140Contestants].sort((a, b) => {
+        return calculateTotalScore(b.id, iste140Judges) - calculateTotalScore(a.id, iste140Judges);
+    });
 
-                    return (
-                        <div key={judge} style={{
-                            padding: '1rem',
-                            background: 'var(--bg-card)',
-                            borderRadius: 'var(--radius-md)',
-                            border: '1px solid var(--border-color)',
-                            borderLeft: `4px solid ${isOnline ? 'var(--accent-success)' : 'var(--text-secondary)'}`
-                        }}>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                <span style={{ fontWeight: 'bold' }}>{displayName}</span>
-                                <span style={{
-                                    fontSize: '0.75rem',
-                                    padding: '0.25rem 0.5rem',
-                                    borderRadius: '1rem',
-                                    background: isOnline ? 'rgba(74, 222, 128, 0.1)' : 'rgba(148, 163, 184, 0.1)',
-                                    color: isOnline ? 'var(--accent-success)' : 'var(--text-secondary)'
-                                }}>
-                                    {isOnline ? 'Online' : 'Offline'}
-                                </span>
-                            </div>
-                            <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', marginTop: '0.5rem' }}>
-                                {isOnline ? status.status : 'Last seen: ' + (status ? new Date(status.timestamp).toLocaleTimeString() : 'Never')}
-                            </p>
-                        </div>
-                    );
-                })}
-            </div>
-        </div>
-    );
-
-    const renderLeaderboard = (sortedContestants, judges, title) => (
-        <div className="glass-panel" style={{ padding: '1.5rem' }}>
-            <h2 style={{ fontSize: '1.25rem', marginBottom: '1rem', color: 'var(--accent-primary)' }}>{title}</h2>
+    const renderLeaderboard = (sortedList, judges, title, maxScore) => (
+        <div style={{ marginBottom: '3rem' }}>
+            <h2 style={{ fontSize: '1.5rem', marginBottom: '1rem', color: 'var(--accent-primary)' }}>{title}</h2>
             <div style={{ overflowX: 'auto' }}>
                 <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                     <thead>
-                        <tr style={{ borderBottom: '1px solid var(--border-color)' }}>
-                            <th style={{ textAlign: 'left', padding: '1rem', color: 'var(--text-secondary)' }}>Rank</th>
-                            <th style={{ textAlign: 'left', padding: '1rem', color: 'var(--text-secondary)' }}>Contestant</th>
-                            <th style={{ textAlign: 'right', padding: '1rem', color: 'var(--text-secondary)' }}>Total Score</th>
+                        <tr style={{ borderBottom: '2px solid var(--border-color)' }}>
+                            <th style={{ padding: '1rem', textAlign: 'left', color: 'var(--text-secondary)' }}>Rank</th>
+                            <th style={{ padding: '1rem', textAlign: 'left', color: 'var(--text-secondary)' }}>Contestant</th>
+                            {judges.map(judge => (
+                                <th key={judge} style={{ padding: '1rem', textAlign: 'center', color: 'var(--text-secondary)' }}>
+                                    {judge.replace('_iste140', '')}
+                                </th>
+                            ))}
+                            <th style={{ padding: '1rem', textAlign: 'center', color: 'var(--text-secondary)' }}>Total</th>
+                            <th style={{ padding: '1rem', textAlign: 'center', color: 'var(--text-secondary)' }}>Status</th>
                         </tr>
                     </thead>
                     <tbody>
-                        {sortedContestants.map((contestant, index) => (
-                            <tr key={contestant.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
-                                <td style={{ padding: '1rem', fontWeight: 'bold', color: index < 3 ? 'var(--accent-primary)' : 'inherit' }}>
-                                    #{index + 1}
-                                </td>
-                                <td style={{ padding: '1rem' }}>
-                                    <div style={{ fontWeight: 'bold', color: 'white' }}>
-                                        #{contestant.id} - <a
+                        {sortedList.map((contestant, index) => {
+                            const total = calculateTotalScore(contestant.id, judges);
+                            const isComplete = judges.every(judge => allScores[judge]?.[contestant.id]);
+
+                            return (
+                                <tr key={contestant.id} style={{ borderBottom: '1px solid var(--border-color)' }}>
+                                    <td style={{ padding: '1rem', fontWeight: 'bold', color: 'var(--accent-primary)' }}>
+                                        #{index + 1}
+                                    </td>
+                                    <td style={{ padding: '1rem' }}>
+                                        <div style={{ fontWeight: '600', color: 'white' }}>
+                                            {activeCategory === 'iste140'
+                                                ? `Section ${contestant.section} - Group ${contestant.team}`
+                                                : (contestant.name || contestant.members)
+                                            }
+                                        </div>
+                                        {activeCategory === 'iste140' && (
+                                            <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginTop: '0.25rem' }}>
+                                                {contestant.members}
+                                            </div>
+                                        )}
+                                        <a
                                             href={contestant.link}
                                             target="_blank"
                                             rel="noopener noreferrer"
-                                            style={{
-                                                color: 'white',
-                                                textDecoration: 'none',
-                                                transition: 'all 0.2s ease'
-                                            }}
-                                            onMouseEnter={(e) => {
-                                                e.target.style.textDecoration = 'underline';
-                                            }}
-                                            onMouseLeave={(e) => {
-                                                e.target.style.textDecoration = 'none';
-                                            }}
+                                            style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', textDecoration: 'underline' }}
                                         >
-                                            {contestant.name}
+                                            View Project ↗
                                         </a>
-                                    </div>
-                                </td>
-                                <td style={{ padding: '1rem', textAlign: 'right', fontWeight: 'bold', fontSize: '1.1rem' }}>
-                                    {calculateTotalScore(contestant.id, judges)}
-                                </td>
-                            </tr>
-                        ))}
+                                    </td>
+                                    {judges.map(judge => {
+                                        const score = allScores[judge]?.[contestant.id];
+                                        return (
+                                            <td key={judge} style={{ padding: '1rem', textAlign: 'center' }}>
+                                                {score ? (
+                                                    <span style={{ color: 'var(--accent-success)' }}>{score.total}</span>
+                                                ) : (
+                                                    <span style={{ color: 'var(--text-secondary)' }}>-</span>
+                                                )}
+                                            </td>
+                                        );
+                                    })}
+                                    <td style={{ padding: '1rem', textAlign: 'center', fontWeight: 'bold', fontSize: '1.1rem' }}>
+                                        <span style={{ color: 'var(--accent-primary)' }}>
+                                            {total} <span style={{ fontSize: '0.875rem', color: 'var(--text-secondary)' }}>/{maxScore}</span>
+                                        </span>
+                                    </td>
+                                    <td style={{ padding: '1rem', textAlign: 'center' }}>
+                                        {isComplete ? (
+                                            <span style={{ color: 'var(--accent-success)' }}>✓ Complete</span>
+                                        ) : (
+                                            <span style={{ color: 'var(--text-secondary)' }}>Pending</span>
+                                        )}
+                                    </td>
+                                </tr>
+                            );
+                        })}
                     </tbody>
                 </table>
             </div>
@@ -121,78 +136,217 @@ export default function Leaderboard({ onLogout }) {
     );
 
     return (
-        <div style={{ padding: '2rem', maxWidth: '1400px', margin: '0 auto' }}>
-            <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
+        <div style={{ maxWidth: '1400px', margin: '0 auto', padding: '2rem' }}>
+            <header style={{ marginBottom: '2rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <h1 style={{ fontSize: '2rem', fontWeight: 'bold', color: 'var(--accent-primary)' }}>Admin Dashboard</h1>
-                <div style={{ display: 'flex', gap: '1rem' }}>
-                    <button
-                        onClick={() => {
-                            if (window.confirm('ARE YOU SURE? This will delete ALL Round 1 scores.')) {
-                                resetRound1();
-                            }
-                        }}
-                        style={{
-                            padding: '0.5rem 1rem',
-                            background: 'rgba(248, 113, 113, 0.1)',
-                            border: '1px solid var(--accent-danger)',
-                            borderRadius: 'var(--radius-md)',
-                            color: 'var(--accent-danger)',
-                            fontWeight: 'bold',
-                            fontSize: '0.875rem'
-                        }}
-                    >
-                        ⚠ Reset Round 1
-                    </button>
-                    <button
-                        onClick={() => {
-                            if (window.confirm('ARE YOU SURE? This will delete ALL Round 2 scores.')) {
-                                resetRound2();
-                            }
-                        }}
-                        style={{
-                            padding: '0.5rem 1rem',
-                            background: 'rgba(248, 113, 113, 0.1)',
-                            border: '1px solid var(--accent-danger)',
-                            borderRadius: 'var(--radius-md)',
-                            color: 'var(--accent-danger)',
-                            fontWeight: 'bold',
-                            fontSize: '0.875rem'
-                        }}
-                    >
-                        ⚠ Reset Round 2
-                    </button>
-                    <button
-                        onClick={onLogout}
-                        style={{
-                            padding: '0.5rem 1rem',
-                            background: 'rgba(255, 255, 255, 0.1)',
-                            border: '1px solid var(--border-color)',
-                            borderRadius: 'var(--radius-md)',
-                            color: 'var(--text-primary)'
-                        }}
-                    >
-                        Logout
-                    </button>
-                </div>
+                <button
+                    onClick={onLogout}
+                    style={{ background: 'transparent', color: 'var(--text-secondary)', fontSize: '0.875rem' }}
+                >
+                    Logout
+                </button>
             </header>
 
-            {/* Round 1 Section */}
-            <div style={{ marginBottom: '3rem' }}>
-                <h2 style={{ fontSize: '1.5rem', fontWeight: 'bold', color: 'var(--accent-secondary)', marginBottom: '1rem' }}>🏆 Round 1</h2>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: '2rem' }}>
-                    {renderJudgeStatus(round1Judges, 'Round 1 Judges')}
-                    {renderLeaderboard(sortedRound1, round1Judges, 'Round 1 Leaderboard')}
+            {/* Category Tabs */}
+            <div className="glass-panel" style={{ padding: '0.5rem', marginBottom: '2rem', display: 'inline-flex', gap: '0.5rem' }}>
+                <button
+                    onClick={() => setActiveCategory('individual')}
+                    style={{
+                        padding: '0.5rem 1rem',
+                        background: activeCategory === 'individual' ? 'var(--accent-primary)' : 'transparent',
+                        color: activeCategory === 'individual' ? '#000' : 'var(--text-secondary)',
+                        border: 'none',
+                        borderRadius: 'var(--radius-sm)',
+                        fontSize: '0.875rem',
+                        fontWeight: activeCategory === 'individual' ? 'bold' : 'normal',
+                        cursor: 'pointer'
+                    }}
+                >
+                    Individual
+                </button>
+                <button
+                    onClick={() => setActiveCategory('iste140')}
+                    style={{
+                        padding: '0.5rem 1rem',
+                        background: activeCategory === 'iste140' ? 'var(--accent-primary)' : 'transparent',
+                        color: activeCategory === 'iste140' ? '#000' : 'var(--text-secondary)',
+                        border: 'none',
+                        borderRadius: 'var(--radius-sm)',
+                        fontSize: '0.875rem',
+                        fontWeight: activeCategory === 'iste140' ? 'bold' : 'normal',
+                        cursor: 'pointer'
+                    }}
+                >
+                    ISTE140
+                </button>
+            </div>
+
+            {/* Judge Status - Universal for all judges */}
+            <div className="glass-panel" style={{ padding: '1.5rem', marginBottom: '2rem' }}>
+                <h3 style={{ fontSize: '1.25rem', marginBottom: '1rem', color: 'white' }}>Judge Status</h3>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem' }}>
+                    {['Laayba', 'Mariam', 'Khaleel', 'MrRashed', 'Khaled'].map(judgeName => {
+                        // For Laayba, check both her Individual and ISTE140 statuses and show the most recent
+                        let status, lastSeen, isRecent;
+
+                        if (judgeName === 'Laayba') {
+                            const individualStatus = statuses['Laayba'];
+                            const iste140Status = statuses['Laayba_iste140'];
+
+                            const individualTime = individualStatus?.timestamp || 0;
+                            const iste140Time = iste140Status?.timestamp || 0;
+
+                            // Use whichever status is more recent
+                            status = iste140Time > individualTime ? iste140Status : individualStatus;
+                            lastSeen = status?.timestamp ? new Date(status.timestamp) : null;
+                            isRecent = lastSeen && (Date.now() - lastSeen.getTime() < 60000);
+                        } else {
+                            status = statuses[judgeName];
+                            lastSeen = status?.timestamp ? new Date(status.timestamp) : null;
+                            isRecent = lastSeen && (Date.now() - lastSeen.getTime() < 60000);
+                        }
+
+                        return (
+                            <div key={judgeName} style={{ padding: '1rem', background: 'var(--bg-secondary)', borderRadius: 'var(--radius-md)' }}>
+                                <div style={{ fontWeight: '600', marginBottom: '0.5rem', color: 'white' }}>
+                                    {judgeName}
+                                </div>
+                                <div style={{ fontSize: '0.875rem', color: isRecent ? 'var(--accent-success)' : 'var(--text-secondary)' }}>
+                                    {status?.status || 'Offline'}
+                                </div>
+                                {lastSeen && (
+                                    <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginTop: '0.25rem' }}>
+                                        {isRecent ? 'Active now' : `${Math.floor((Date.now() - lastSeen.getTime()) / 60000)}m ago`}
+                                    </div>
+                                )}
+                            </div>
+                        );
+                    })}
                 </div>
             </div>
 
-            {/* Round 2 Section */}
-            <div>
-                <h2 style={{ fontSize: '1.5rem', fontWeight: 'bold', color: 'var(--accent-secondary)', marginBottom: '1rem' }}>🏆 Round 2</h2>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: '2rem' }}>
-                    {renderJudgeStatus(round2Judges, 'Round 2 Judges')}
-                    {renderLeaderboard(sortedRound2, round2Judges, 'Round 2 Leaderboard')}
+            {/* Leaderboards */}
+            {activeCategory === 'individual' ? (
+                <>
+                    {renderLeaderboard(sortedRound1, round1Judges, 'Round 1 - All Contestants', 30)}
+
+                    <div style={{ marginBottom: '2rem' }}>
+                        <button
+                            onClick={() => handleResetClick('round1')}
+                            style={{
+                                padding: '0.75rem 1.5rem',
+                                background: 'var(--accent-danger)',
+                                color: 'white',
+                                border: 'none',
+                                borderRadius: 'var(--radius-md)',
+                                fontWeight: 'bold',
+                                cursor: 'pointer'
+                            }}
+                        >
+                            Reset Round 1 (Judges)
+                        </button>
+                    </div>
+
+                    {renderLeaderboard(sortedRound2, round2Judges, 'Round 2 - Top 10', 20)}
+
+                    <button
+                        onClick={() => handleResetClick('round2')}
+                        style={{
+                            padding: '0.75rem 1.5rem',
+                            background: 'var(--accent-danger)',
+                            color: 'white',
+                            border: 'none',
+                            borderRadius: 'var(--radius-md)',
+                            fontWeight: 'bold',
+                            cursor: 'pointer'
+                        }}
+                    >
+                        Reset Round 2 (Mr. Rashed)
+                    </button>
+                </>
+            ) : (
+                <>
+                    {renderLeaderboard(sortedISTE140, iste140Judges, 'ISTE140 - All Teams', 15)}
+
+                    <button
+                        onClick={() => handleResetClick('iste140')}
+                        style={{
+                            padding: '0.75rem 1.5rem',
+                            background: 'var(--accent-danger)',
+                            color: 'white',
+                            border: 'none',
+                            borderRadius: 'var(--radius-md)',
+                            fontWeight: 'bold',
+                            cursor: 'pointer'
+                        }}
+                    >
+                        Reset ISTE140 System
+                    </button>
+                </>
+            )}
+
+            {/* Reset Confirmation Modal */}
+            {showResetModal && (
+                <div style={{
+                    position: 'fixed',
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    background: 'rgba(0, 0, 0, 0.8)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    zIndex: 1000,
+                    backdropFilter: 'blur(4px)'
+                }}>
+                    <div className="glass-panel" style={{
+                        padding: '2rem',
+                        maxWidth: '500px',
+                        width: '90%',
+                        textAlign: 'center'
+                    }}>
+                        <h2 style={{ fontSize: '1.5rem', marginBottom: '1rem', color: 'var(--accent-danger)' }}>
+                            ⚠️ Confirm Reset
+                        </h2>
+                        <p style={{ marginBottom: '2rem', color: 'var(--text-secondary)', lineHeight: '1.6' }}>
+                            Are you sure you want to reset all <strong style={{ color: 'white' }}>
+                                {resetType === 'round1' ? 'Round 1' : resetType === 'round2' ? 'Round 2' : 'ISTE140'}
+                            </strong> scores? This action cannot be undone!
+                        </p>
+                        <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center' }}>
+                            <button
+                                onClick={() => setShowResetModal(false)}
+                                style={{
+                                    padding: '0.75rem 1.5rem',
+                                    background: 'var(--bg-secondary)',
+                                    color: 'white',
+                                    border: 'none',
+                                    borderRadius: 'var(--radius-md)',
+                                    fontWeight: 'bold',
+                                    cursor: 'pointer'
+                                }}
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={confirmReset}
+                                style={{
+                                    padding: '0.75rem 1.5rem',
+                                    background: 'var(--accent-danger)',
+                                    color: 'white',
+                                    border: 'none',
+                                    borderRadius: 'var(--radius-md)',
+                                    fontWeight: 'bold',
+                                    cursor: 'pointer'
+                                }}
+                            >
+                                Yes, Reset
+                            </button>
+                        </div>
+                    </div>
                 </div>
-            </div>
+            )}
         </div>
     );
 }
