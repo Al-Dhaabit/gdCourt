@@ -1,10 +1,12 @@
 import React from 'react';
 import { contestants } from '../data/contestants';
+import { getContestantsForJudge } from '../data/judgeAssignments';
 import { useScoring } from '../hooks/useScoring';
 
 export default function Dashboard({ judgeId, onSelectContestant }) {
     const { getScore, getJudgeProgress, updateStatus } = useScoring();
-    const progress = getJudgeProgress(judgeId, contestants.length);
+    const assignedContestants = getContestantsForJudge(judgeId, contestants);
+    const progress = getJudgeProgress(judgeId, assignedContestants.length);
 
     React.useEffect(() => {
         updateStatus(judgeId, 'Viewing Dashboard');
@@ -34,7 +36,7 @@ export default function Dashboard({ judgeId, onSelectContestant }) {
                 gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))',
                 gap: '1rem'
             }}>
-                {contestants.map(contestant => {
+                {assignedContestants.map(contestant => {
                     const score = getScore(judgeId, contestant.id);
                     const isComplete = !!score;
 
@@ -62,15 +64,7 @@ export default function Dashboard({ judgeId, onSelectContestant }) {
                                 e.currentTarget.style.boxShadow = 'none';
                             }}
                         >
-                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                                <span style={{
-                                    fontSize: '0.75rem',
-                                    color: 'var(--text-secondary)',
-                                    textTransform: 'uppercase',
-                                    letterSpacing: '0.05em'
-                                }}>
-                                    #{contestant.id}
-                                </span>
+                            <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'flex-start' }}>
                                 {isComplete && (
                                     <span style={{
                                         color: 'var(--accent-success)',
@@ -80,7 +74,7 @@ export default function Dashboard({ judgeId, onSelectContestant }) {
                                     </span>
                                 )}
                             </div>
-                            <h3 style={{ fontSize: '1.1rem', fontWeight: '600', color: 'white' }}>Contestant {contestant.id}</h3>
+                            <h3 style={{ fontSize: '1.1rem', fontWeight: '600', color: 'white' }}>{contestant.name}</h3>
                             {isComplete ? (
                                 <div style={{ marginTop: 'auto', paddingTop: '0.5rem' }}>
                                     <span style={{ fontSize: '0.875rem', color: 'var(--text-secondary)' }}>Score: </span>

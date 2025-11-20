@@ -64,5 +64,20 @@ export function useScoring() {
         window.location.reload();
     };
 
-    return { saveScore, getScore, getJudgeProgress, allScores, updateStatus, getStatuses, resetSystem };
+    const resetRound1 = () => {
+        const round1Judges = ['Laayba', 'Mariam', 'Khaleel'];
+        round1Judges.forEach(judge => {
+            remove(ref(db, `scores/${judge}`));
+            remove(ref(db, `status/${judge}`));
+        });
+        window.location.reload();
+    };
+
+    const resetRound2 = () => {
+        remove(ref(db, 'scores/Rashed'));
+        remove(ref(db, 'status/Rashed'));
+        window.location.reload();
+    };
+
+    return { saveScore, getScore, getJudgeProgress, allScores, updateStatus, getStatuses, resetSystem, resetRound1, resetRound2 };
 }

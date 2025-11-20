@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { contestants } from '../data/contestants';
+import { getContestantsForJudge } from '../data/judgeAssignments';
 import { useScoring } from '../hooks/useScoring';
 
 const RUBRIC = [
@@ -14,6 +15,7 @@ export default function ScoringView({ judgeId, contestantId, onBack }) {
     const [scores, setScores] = useState({ visual: '', creativity: '', ux: '', polish: '' });
     const [currentId, setCurrentId] = useState(contestantId);
 
+    const assignedContestants = getContestantsForJudge(judgeId, contestants);
     const contestant = contestants.find(c => c.id === currentId);
     const existingScore = getScore(judgeId, currentId);
 
@@ -48,19 +50,29 @@ export default function ScoringView({ judgeId, contestantId, onBack }) {
             details: scores,
             timestamp: new Date().toISOString()
         });
+
+        // Show thank you message for Rashed when he finishes the last contestant
+        const currentIndex = assignedContestants.findIndex(c => c.id === currentId);
+        if (judgeId === 'Rashed' && currentIndex === assignedContestants.length - 1) {
+            setTimeout(() => {
+                alert('🎉 That\'s the end! Thank you so much for agreeing to be a judge, Mr. Rashed. Your contribution is greatly appreciated!');
+            }, 300);
+        }
     };
 
     const handleNext = () => {
         handleSave();
-        if (currentId < contestants.length) {
-            setCurrentId(currentId + 1);
+        const currentIndex = assignedContestants.findIndex(c => c.id === currentId);
+        if (currentIndex < assignedContestants.length - 1) {
+            setCurrentId(assignedContestants[currentIndex + 1].id);
         }
     };
 
     const handlePrev = () => {
         handleSave();
-        if (currentId > 1) {
-            setCurrentId(currentId - 1);
+        const currentIndex = assignedContestants.findIndex(c => c.id === currentId);
+        if (currentIndex > 0) {
+            setCurrentId(assignedContestants[currentIndex - 1].id);
         }
     };
 
@@ -90,36 +102,49 @@ export default function ScoringView({ judgeId, contestantId, onBack }) {
                 <div style={{ display: 'flex', gap: '1rem' }}>
                     <button
                         onClick={handlePrev}
-                        disabled={currentId === 1}
+                        disabled={assignedContestants.findIndex(c => c.id === currentId) === 0}
                         style={{
                             padding: '0.5rem 1rem',
                             borderRadius: 'var(--radius-md)',
                             background: 'var(--bg-secondary)',
                             color: 'var(--text-primary)',
-                            opacity: currentId === 1 ? 0.5 : 1
+                            opacity: assignedContestants.findIndex(c => c.id === currentId) === 0 ? 0.5 : 1
                         }}
                     >
                         Previous
                     </button>
-                    <button
-                        onClick={handleNext}
-                        disabled={currentId === contestants.length}
-                        style={{
-                            padding: '0.5rem 1rem',
-                            borderRadius: 'var(--radius-md)',
-                            background: 'var(--accent-primary)',
-                            color: '#000',
-                            fontWeight: 'bold',
-                            opacity: currentId === contestants.length ? 0.5 : 1
-                        }}
-                    >
-                        Save & Next
-                    </button>
+                    {assignedContestants.findIndex(c => c.id === currentId) === assignedContestants.length - 1 ? (
+                        <button
+                            onClick={handleSave}
+                            style={{
+                                padding: '0.5rem 1rem',
+                                borderRadius: 'var(--radius-md)',
+                                background: 'var(--accent-success)',
+                                color: '#000',
+                                fontWeight: 'bold'
+                            }}
+                        >
+                            Save Score
+                        </button>
+                    ) : (
+                        <button
+                            onClick={handleNext}
+                            style={{
+                                padding: '0.5rem 1rem',
+                                borderRadius: 'var(--radius-md)',
+                                background: 'var(--accent-primary)',
+                                color: '#000',
+                                fontWeight: 'bold'
+                            }}
+                        >
+                            Save & Next
+                        </button>
+                    )}
                 </div>
             </div>
 
             <div style={{ marginBottom: '2rem', borderBottom: '1px solid var(--border-color)', paddingBottom: '1rem' }}>
-                <h2 style={{ fontSize: '2rem', marginBottom: '0.5rem', fontWeight: 'bold', color: 'white' }}>Contestant {contestant.id}</h2>
+                <h2 style={{ fontSize: '2rem', marginBottom: '0.5rem', fontWeight: 'bold', color: 'white' }}>{contestant.name}</h2>
                 <a
                     href={contestant.link}
                     target="_blank"

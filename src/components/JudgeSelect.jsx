@@ -4,7 +4,8 @@ const JUDGES = {
     'Laayba': 'justice',
     'Mariam': 'rabbits',
     'Khaleel': 'goat',
-    'Khaled': 'lebanon'
+    'Khaled': 'lebanon',
+    'Rashed': 'THE GOAT'
 };
 
 export default function JudgeSelect({ onSelect }) {
