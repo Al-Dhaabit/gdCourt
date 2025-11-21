@@ -266,7 +266,7 @@ export default function Leaderboard({ onLogout }) {
                 </>
             ) : (
                 <>
-                    {renderLeaderboard(sortedISTE140, iste140Judges, 'ISTE140 - All Teams', 15)}
+                    {renderLeaderboard(sortedISTE140, iste140Judges, 'ISTE140 - All Teams', 30)}
 
                     <button
                         onClick={() => handleResetClick('iste140')}
