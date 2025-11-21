@@ -39,7 +39,10 @@ export function useScoring() {
     const getJudgeProgress = (judgeId, assignedContestantIds) => {
         const judgeScores = allScores[judgeId] || {};
         // Filter scores to only include those in the assigned list
-        const scoredCount = Object.keys(judgeScores).filter(id => assignedContestantIds.includes(id)).length;
+        // Convert assigned IDs to strings for comparison with Firebase keys (which are always strings)
+        const assignedIdsStr = assignedContestantIds.map(String);
+        const scoredCount = Object.keys(judgeScores).filter(id => assignedIdsStr.includes(String(id))).length;
+
         const total = assignedContestantIds.length;
         return {
             scored: scoredCount,
