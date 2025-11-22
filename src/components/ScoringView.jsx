@@ -56,7 +56,7 @@ export default function ScoringView({ judgeId, category = 'individual', contesta
                 ? `Section ${currentContestant?.section} - Group ${currentContestant?.team}`
                 : `Contestant ${currentContestant?.id}`)
             : currentContestant?.name;
-        updateStatus(judgeId, `Scoring ${contestantName} (${category === 'iste140' ? 'ISTE140' : 'Individual'})`);
+        updateStatus(judgeId, `Scoring ${contestantName} (${category === 'iste140' ? 'ISTE140' : 'Individual'})`, currentId);
     }, [judgeId, currentId, category, currentContestant]);
 
     const existingScore = getScore(judgeId, currentId);

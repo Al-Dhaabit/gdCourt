@@ -1,4 +1,6 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import { ref, onValue } from 'firebase/database';
+import { db } from '../firebase';
 
 const JUDGES = {
     'Laayba': 'justice',
@@ -11,13 +13,26 @@ const JUDGES = {
 const ADMIN_PASSWORD = 'lebanon';
 
 export default function JudgeSelect({ onSelect }) {
-    const [selectedJudge, setSelectedJudge] = React.useState(null);
-    const [password, setPassword] = React.useState('');
-    const [error, setError] = React.useState('');
-    const [showAdminLogin, setShowAdminLogin] = React.useState(false);
+    const [selectedJudge, setSelectedJudge] = useState(null);
+    const [password, setPassword] = useState('');
+    const [error, setError] = useState('');
+    const [showAdminLogin, setShowAdminLogin] = useState(false);
+    const [isLocked, setIsLocked] = useState(false);
+
+    useEffect(() => {
+        const lockRef = ref(db, 'system/locked');
+        const unsubscribe = onValue(lockRef, (snapshot) => {
+            setIsLocked(snapshot.val() === true);
+        });
+        return () => unsubscribe();
+    }, []);
 
     const handleLogin = (e) => {
         e.preventDefault();
+        if (isLocked) {
+            setError('System is currently locked by admin');
+            return;
+        }
         if (JUDGES[selectedJudge] === password) {
             onSelect(selectedJudge);
         } else {
@@ -152,38 +167,49 @@ export default function JudgeSelect({ onSelect }) {
                 ) : !selectedJudge ? (
                     <>
                         <h1 style={{ marginBottom: '1rem', color: 'var(--accent-primary)' }}>Welcome, Judge</h1>
-                        <p style={{ marginBottom: '2rem', color: 'var(--text-secondary)' }}>Please select your profile to begin scoring.</p>
+                        {isLocked ? (
+                            <div style={{ padding: '2rem', textAlign: 'center' }}>
+                                <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>🔒</div>
+                                <h2 style={{ color: 'var(--accent-danger)', marginBottom: '0.5rem' }}>System Locked</h2>
+                                <p style={{ color: 'var(--text-secondary)' }}>The judging system is currently locked by the administrator.</p>
+                                <p style={{ color: 'var(--text-secondary)', fontSize: '0.875rem', marginTop: '1rem' }}>Please contact the admin for access.</p>
+                            </div>
+                        ) : (
+                            <>
+                                <p style={{ marginBottom: '2rem', color: 'var(--text-secondary)' }}>Please select your profile to begin scoring.</p>
 
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                            {Object.keys(JUDGES).map(judge => (
-                                <button
-                                    key={judge}
-                                    onClick={() => setSelectedJudge(judge)}
-                                    style={{
-                                        padding: '1rem',
-                                        background: 'transparent',
-                                        border: '1px solid var(--border-color)',
-                                        borderRadius: 'var(--radius-md)',
-                                        color: 'var(--text-primary)',
-                                        fontSize: '1.1rem',
-                                        transition: 'all 0.2s ease',
-                                        cursor: 'pointer'
-                                    }}
-                                    onMouseEnter={(e) => {
-                                        e.target.style.background = 'rgba(255, 207, 122, 0.1)';
-                                        e.target.style.borderColor = 'var(--accent-primary)';
-                                        e.target.style.color = 'var(--accent-primary)';
-                                    }}
-                                    onMouseLeave={(e) => {
-                                        e.target.style.background = 'transparent';
-                                        e.target.style.borderColor = 'var(--border-color)';
-                                        e.target.style.color = 'var(--text-primary)';
-                                    }}
-                                >
-                                    {judge}
-                                </button>
-                            ))}
-                        </div>
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                                    {Object.keys(JUDGES).map(judge => (
+                                        <button
+                                            key={judge}
+                                            onClick={() => setSelectedJudge(judge)}
+                                            style={{
+                                                padding: '1rem',
+                                                background: 'transparent',
+                                                border: '1px solid var(--border-color)',
+                                                borderRadius: 'var(--radius-md)',
+                                                color: 'var(--text-primary)',
+                                                fontSize: '1.1rem',
+                                                transition: 'all 0.2s ease',
+                                                cursor: 'pointer'
+                                            }}
+                                            onMouseEnter={(e) => {
+                                                e.target.style.background = 'rgba(255, 207, 122, 0.1)';
+                                                e.target.style.borderColor = 'var(--accent-primary)';
+                                                e.target.style.color = 'var(--accent-primary)';
+                                            }}
+                                            onMouseLeave={(e) => {
+                                                e.target.style.background = 'transparent';
+                                                e.target.style.borderColor = 'var(--border-color)';
+                                                e.target.style.color = 'var(--text-primary)';
+                                            }}
+                                        >
+                                            {judge}
+                                        </button>
+                                    ))}
+                                </div>
+                            </>
+                        )}
                     </>
                 ) : (
                     <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>

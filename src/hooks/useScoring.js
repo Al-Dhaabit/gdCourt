@@ -51,12 +51,16 @@ export function useScoring() {
         };
     };
 
-    const updateStatus = (judgeId, status) => {
+    const updateStatus = (judgeId, status, currentContestantId = null) => {
         const statusRef = ref(db, `status/${judgeId}`);
-        update(statusRef, {
+        const statusData = {
             status,
             timestamp: Date.now()
-        });
+        };
+        if (currentContestantId) {
+            statusData.currentContestantId = currentContestantId;
+        }
+        update(statusRef, statusData);
     };
 
     const getStatuses = () => {

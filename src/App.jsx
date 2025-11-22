@@ -84,7 +84,7 @@ function App() {
     return (
         <div className="app-container" style={{ maxWidth: '1200px', margin: '0 auto', padding: '2rem' }}>
             <header style={{ marginBottom: '2rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <h1 style={{ fontSize: '1.5rem', fontWeight: 'bold', color: 'var(--accent-primary)' }}>The gdCourt</h1>
+                <h1 style={{ fontSize: '1.5rem', fontWeight: 'bold', color: 'var(--accent-primary)' }}>gdCourt</h1>
                 <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
                     {canSwitchCategory && (
                         <div className="glass-panel" style={{ padding: '0.5rem', display: 'flex', gap: '0.5rem' }}>
